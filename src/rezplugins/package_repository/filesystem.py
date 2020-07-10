@@ -450,6 +450,7 @@ class FileSystemPackageRepository(PackageRepository):
     """
     schema_dict = {"file_lock_timeout": int,
                    "file_lock_dir": Or(None, str),
+                   "file_lock_type": Or("default", "link", "mkdir"),
                    "package_filenames": [basestring]}
 
     building_prefix = ".building"
@@ -716,7 +717,12 @@ class FileSystemPackageRepository(PackageRepository):
 
     @contextmanager
     def _lock_package(self, package_name, package_version=None):
-        from rez.vendor.lockfile import LockFile
+        if _settings.file_lock_type == 'default':
+            from rez.vendor.lockfile import LockFile
+        elif _settings.file_lock_type == 'mkdir':
+            from rez.vendor.lockfile.mkdirlockfile import MkdirLockFile as LockFile
+        elif _settings.file_lock_type == 'link':
+            from rez.vendor.lockfile.linklockfile import LinkLockFile as LockFile
 
         path = self.location
 
